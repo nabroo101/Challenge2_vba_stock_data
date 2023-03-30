@@ -1,0 +1,146 @@
+Sub StockCalc()
+  
+
+'Declaring the data type for variables in my code
+Dim TickerName As String
+Dim TickerTotal As Double
+
+Dim OpeningValue As Double
+Dim ClosingValue As Double
+
+Dim YearlyChange As Double
+Dim MaxYearlyChange As Double
+
+Dim MaxTicker As String
+Dim MinTicker As String
+
+Dim MaxTickerTotal As Double
+Dim MaxTickerTotalName As String
+
+Dim SummaryTable As Integer
+
+'Declaring the worksheets
+Dim ws As Worksheet
+For Each ws In Sheets
+
+
+'Setting up the headers for the summarytable1,2 and Autofit them
+ws.Cells(1, "I") = "Ticker"
+ws.Cells(1, "J") = "Yearly Change"
+ws.Cells(1, "K") = "Percent Change"
+ws.Cells(1, "L") = "Total Stock Volume"
+
+ws.Cells(2, "O") = "Greatest%Increase"
+ws.Cells(3, "O") = "Greatest%Decrease"
+ws.Cells(4, "O") = "Greatest Total Volume"
+
+ws.Cells(1, "P") = "Ticker"
+ws.Cells(1, "Q") = "Value"
+
+ws.Columns("L:L").EntireColumn.AutoFit
+ws.Columns("O:O").EntireColumn.AutoFit
+ws.Columns("J:J").EntireColumn.AutoFit
+ws.Columns("K:K").EntireColumn.AutoFit
+
+
+
+'Defining the variables to get the total stock volume and the ticker symbols
+MaxYearlyChange = 0
+MaxTicker = ""
+
+'Defining the variables to get the yearly change and percent change
+MinYearlyChange = 0
+MinTicker = ""
+MaxTickerTotal = 0
+MaxTickerTotalName = ""
+
+'Definig the limits for the loop with function for the last row
+TickerTotal = 0
+SummaryTable = 2
+lastRow = ActiveSheet.Cells(ActiveSheet.Rows.Count, 1).End(xlUp).Row
+For Row = 2 To lastRow
+
+
+  
+'starting the If statment
+If ws.Cells(Row, 1).Value <> ws.Cells(Row + 1, 1) Then
+
+' function to calculate the total stock volume
+TickerTotal = TickerTotal + ws.Cells(Row, 7).Value
+    
+    TickerName = ws.Cells(Row, 1).Value
+    ClosingValue = ws.Cells(Row, "F").Value
+ 
+ ' functions to calculate the yearly change and percent change
+    YearlyChange = ClosingValue - OpeningValue
+    PercentChange = (YearlyChange) / OpeningValue
+            
+ ' assinging the variables to the summary table for the ticker symboles and total stock volume
+    ws.Range("I" & SummaryTable).Value = TickerName
+    ws.Range("L" & SummaryTable).Value = TickerTotal
+ 
+ 'assigning the variables to the summary table for the yearly change and percent change
+    ws.Range("J" & SummaryTable).Value = YearlyChange
+    ws.Range("K" & SummaryTable).Value = Format(PercentChange, "percent")
+    
+    'nested if function to adjust to value vs fill cell color
+        If YearlyChange < 0 Then
+           ws.Range("J" & SummaryTable).Interior.Color = vbRed
+        ElseIf YearlyChange > 0 Then
+            ws.Range("J" & SummaryTable).Interior.Color = vbGreen
+        End If
+    
+    SummaryTable = SummaryTable + 1
+    
+    'nested if function to calculate greateast percent increase
+        If PercentChange > MaxYearlyChange Then
+            MaxYearlyChange = PercentChange
+            MaxTicker = TickerName
+        End If
+        
+    'nested if function to calculate Minimum percent decrease
+        If PercentChange < MinYearlyChange Then
+            MinYearlyChange = PercentChange
+            MinTicker = TickerName
+        End If
+     
+     'nested if function to calculate greatest total volume
+         If TickerTotal > MaxTickerTotal Then
+            MaxTickerTotal = TickerTotal
+            MaxTickerTotalName = TickerName
+         End If
+     ' assiginig the nested ifs in summarytable 2
+    ws.Cells(2, "P").Value = MaxTicker
+    ws.Cells(3, "P").Value = MinTicker
+    ws.Cells(4, "P").Value = MaxTickerTotalName
+    
+    ws.Cells(2, "Q").Value = Format(MaxYearlyChange, "Percent")
+    ws.Cells(3, "Q").Value = Format(MinYearlyChange, "Percent")
+    ws.Cells(4, "Q").Value = MaxTickerTotal
+    
+   
+    'resetting values
+    TickerTotal = 0
+    
+    ClosingValue = 0
+   
+    OpeningValue = 0
+   
+    YearlyChange = 0
+    Else
+    TickerTotal = TickerTotal + ws.Cells(Row, 7).Value
+
+End If
+
+' closing if statment to calculate the first value of the ticker in it's group
+If ws.Cells(Row - 1, 1).Value <> ws.Cells(Row, 1).Value Then
+    
+    OpeningValue = ws.Cells(Row, "C").Value
+  End If
+  
+
+
+
+Next Row
+Next ws
+End Sub
